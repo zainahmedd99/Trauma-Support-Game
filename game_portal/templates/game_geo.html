@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card geo p-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4>🌍 Geography Explorer — Level: <span class="badge bg-dark">{{ level|capitalize }}</span></h4>
+        <div class="score-chip">Score: <span id="score">0</span></div>
+      </div>
+      
+      <!-- Timer -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="timer-text">Time left: <span id="time-left">{{ time_limit }}</span>s</div>
+        <div class="progress flex-grow-1 mx-3" style="height: 20px;">
+          <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+               id="timer-bar" role="progressbar" style="width: 100%"></div>
+        </div>
+      </div>
+      
+      <!-- Flag Image -->
+      <div class="text-center my-3">
+        <img id="emoji" src="" alt="flag" style="width:150px; height:auto; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.2);" />
+      </div>
+
+      <input class="form-control form-control-lg my-3" id="answer" placeholder="Guess the country/place..." autocomplete="off" style="max-width: 600px;width:80%;margin:0 auto;text-align:center;"/>
+
+      <button class="btn btn-geo" id="btnSubmit" style="max-width:600px;width:80%;margin:0 auto;text-align:center;">Submit</button>
+
+      <div class="mt-3 text-center d-none" id="fun-fact-box">
+        <div class="alert alert-info mb-0" id="fun-fact"></div>
+      </div>
+
+      <form id="endForm" class="d-none" method="POST" action="{{ url_for('submit_level', code=code, level=level) }}">
+        <input type="hidden" name="play_id" value="{{ play_id }}" />
+        <input type="hidden" id="finalScore" name="score" />
+        <input type="hidden" id="finalDur" name="duration_seconds" />
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.geo {
+  background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+  border-radius: 20px;
+  border: 3px solid #55efc4;
+}
+.btn-geo {
+  background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+  color: white; font-weight: bold; border:none; padding:10px 20px;
+  border-radius: 50px; transition: all 0.3s;
+}
+.btn-geo:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+.score-chip { background:#55efc4; padding:8px 15px; border-radius:50px; font-weight:bold; color:#2d3436; }
+.timer-text { font-weight:bold; color:#2d3436; min-width:120px; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const bank = {
+    low: [
+      {e:'fr', a:'france', fact:'🇫🇷 Eiffel Tower in Paris is 330m tall!'},
+      {e:'jp', a:'japan', fact:'🇯🇵 Mount Fuji is Japan’s tallest peak (3,776m).'},
+      {e:'in', a:'india', fact:'🇮🇳 Taj Mahal is one of the 7 Wonders of the World.'},
+      {e:'us', a:'usa', fact:'🇺🇸 Statue of Liberty was a gift from France to the USA.'},
+      {e:'br', a:'brazil', fact:'🇧🇷 Rio’s Christ the Redeemer is 30m tall.'}
+    ],
+    medium: [
+      {e:'gb', a:'uk', fact:'🇬🇧 Big Ben’s tower is officially called Elizabeth Tower.'},
+      {e:'it', a:'italy', fact:'🇮🇹 Leaning Tower of Pisa leans 4°!'},
+      {e:'eg', a:'egypt', fact:'🇪🇬 The Great Pyramid of Giza is 4,500 years old.'},
+      {e:'cl', a:'chile', fact:'🗿 Easter Island statues were carved by the Rapa Nui people.'},
+      {e:'ca', a:'canada', fact:'🇨🇦 Niagara Falls spans both USA & Canada.'}
+    ],
+    high: [
+      {e:'au', a:'australia', fact:'🇦🇺 The Great Barrier Reef is visible from space.'},
+      {e:'cn', a:'china', fact:'🇨🇳 The Great Wall stretches over 21,000 km.'},
+      {e:'mx', a:'mexico', fact:'🇲🇽 Chichén Itzá was a major Mayan city.'},
+      {e:'es', a:'spain', fact:'🇪🇸 La Sagrada Familia has been under construction since 1882.'},
+      {e:'de', a:'germany', fact:'🇩🇪 The Berlin Wall fell in 1989.'}
+    ]
+  };
+
+  const LEVEL = {{ level|tojson }};
+  const TIME_LIMIT = {{ time_limit }};
+  const TOTAL_Q = {{ q_count }};
+  let score = 0, index = 0, elapsed = 0;
+  const pool = bank[LEVEL].slice(0, TOTAL_Q);
+  let timerInterval;
+
+  function showQ(){
+    const q = pool[index];
+    document.getElementById('emoji').src = `https://flagcdn.com/w320/${q.e}.png`;
+    document.getElementById('answer').value = '';
+    document.getElementById('fun-fact-box').classList.add('d-none');
+    document.getElementById('answer').focus();
+  }
+
+  function submit(){
+    const val = document.getElementById('answer').value.trim().toLowerCase();
+    if(!val) return;
+    const q = pool[index];
+    if (val === q.a) { 
+      score += 10; 
+      document.getElementById('emoji').classList.add('border', 'border-success');
+      document.getElementById('fun-fact').textContent = q.fact;
+      document.getElementById('fun-fact-box').classList.remove('d-none');
+      setTimeout(() => document.getElementById('emoji').classList.remove('border', 'border-success'), 300);
+    } else {
+      document.getElementById('emoji').classList.add('border', 'border-danger');
+      setTimeout(() => document.getElementById('emoji').classList.remove('border', 'border-danger'), 300);
+    }
+    index++;
+    document.getElementById('score').textContent = score;
+    if(index >= pool.length) endGame(); else showQ();
+  }
+
+  document.getElementById('btnSubmit').addEventListener('click', submit);
+  document.getElementById('answer').addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); submit(); } });
+
+  function startTimer(duration) {
+    let timeLeft = duration;
+    const timeLeftElement = document.getElementById('time-left');
+    const timerBar = document.getElementById('timer-bar');
+    
+    timerInterval = setInterval(function() {
+      timeLeft--;
+      elapsed = duration - timeLeft;
+      timeLeftElement.textContent = timeLeft;
+      timerBar.style.width = (timeLeft / duration * 100) + '%';
+      if (timeLeft <= 10) {
+        timerBar.classList.remove('bg-warning');
+        timerBar.classList.add('bg-danger');
+      }
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function endGame(){
+    clearInterval(timerInterval);
+    document.getElementById('finalScore').value = score;
+    document.getElementById('finalDur').value = elapsed;
+    document.getElementById('endForm').submit();
+  }
+
+  // Start
+  showQ();
+  startTimer(TIME_LIMIT);
+});
+</script>
+{% endblock %}

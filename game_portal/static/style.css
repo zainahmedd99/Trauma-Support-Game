@@ -1,0 +1,233 @@
+:root {
+  --grad: linear-gradient(135deg, #7F7CFF 0%, #FF8ACE 100%);
+}
+
+/* Floating rainbow background */
+body {
+   background: var(--grad);
+  min-height: 100vh;
+  background: linear-gradient(120deg, #7F7CFF, #FF8ACE, #FFD36F);
+  background-size: 300% 300%;
+  animation: bgShift 12s ease infinite;
+}
+@keyframes bgShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.navbar-brand {
+  font-weight: 800; letter-spacing: 0.5px;
+}
+.card.candy {
+  position: relative; /* needed for pseudo-element */
+  /* background: linear-gradient(135deg, #eb62d0, #d447cb);*/
+  border: 0;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+#candy{
+  
+  position: relative; /* needed for pseudo-element */
+   background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+  border: 0;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+#candy::before{
+content: '';
+  position: absolute;
+  top: 5px; left: 5px; right: 5px; bottom: 5px;
+  border: 3px dashed #fff; /* white dashed “curly” border */
+  border-radius: 1.5rem; /* same as card */
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+
+/* Fake curly/dashed border */
+.card.candy::before {
+  content: '';
+  position: absolute;
+  top: 5px; left: 5px; right: 5px; bottom: 5px;
+  border: 3px dashed #fff; /* white dashed “curly” border */
+  border-radius: 1.5rem; /* same as card */
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+
+
+
+.row > .col-md-6:nth-child(1) .card.candy { background: linear-gradient(135deg, #ffecd2, #fcb69f); }
+.row > .col-md-6:nth-child(2) .card.candy { background: linear-gradient(135deg, #a1c4fd, #c2e9fb); }
+
+.card.candy:hover { transform: translateY(-4px) rotate(-0.2deg); box-shadow: 0 16px 40px rgba(0,0,0,.18); }
+.badge-pill { border-radius: 999px; }
+.btn-sugar {
+  background: #fff; color: #333; border: none; border-radius: 999px; padding: 10px 18px; font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0,0,0,.12);
+}
+.btn-sugar:hover { filter: brightness(0.95); }
+.glow {
+  animation: glow 2.2s ease-in-out infinite alternate;
+}
+@keyframes glow {
+  from { box-shadow: 0 0 12px rgba(255,255,255,.4); }
+  to   { box-shadow: 0 0 24px rgba(255,255,255,.8); }
+}
+.timer-bar {
+  height: 10px; border-radius: 999px; background: rgba(255,255,255,.3);
+}
+.timer-fill {
+  height: 10px; border-radius: 999px; background: #fff; width: 0; transition: width 1s linear;
+}
+.score-chip { background: rgba(255,255,255,.9); padding: 6px 12px; border-radius: 999px; font-weight: 700; }
+
+
+
+/* Make game cards more playful */
+.game-card {
+  background: linear-gradient(145deg, #ffe7f0, #d6eaff);
+  border-radius: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.game-card:hover {
+  transform: translateY(-6px) scale(1.03) rotate(-1deg);
+  box-shadow: 0 20px 40px rgba(0,0,0,.18);
+}
+
+
+
+/* Game titles with candy style */
+.game-title {
+  font-weight: 800;
+  color: #333;
+  text-shadow: 2px 2px #fff;
+}
+
+/* Bounce animation for scores */
+.bounce {
+  animation: bounce 2s infinite;
+}
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+  60% { transform: translateY(-3px); }
+}
+
+/* Button sugar upgrade */
+.btn-sugar {
+  background: linear-gradient(135deg, #ff70a6 0%, #ff9770 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0,0,0,.2);
+  transition: transform .2s ease, filter .2s ease;
+}
+
+.btn-link{
+  background: linear-gradient(135deg, #ff70a6 0%, #ff9770 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0,0,0,.2);
+  transition: transform .2s ease, filter .2s ease;
+  text-decoration: none !important;
+    
+
+}
+
+.btn-link:hover {
+  color: black;              /* prevent default hover color change */
+}
+
+.btn-light{
+   background: linear-gradient(135deg, #ff70a6 0%, #ff9770 100%); 
+  color: #fff;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 24px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0,0,0,.2);
+  transition: transform .2s ease, filter .2s ease;
+  border: 2px solid #fff; /* Added outline */
+}
+.btn-light:hover {
+  border: 2px solid black; /* Added outline */
+}
+
+#light{
+  background: linear-gradient(135deg, #ff70a6 0%, #ff9770 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0,0,0,.2);
+  transition: transform .2s ease, filter .2s ease;
+}
+
+
+.btn-outline-light{
+  background: linear-gradient(135deg, #ff70a6 0%, #ff9770 100%); 
+  color: #fff;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 24px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0,0,0,.2);
+  transition: transform .2s ease, filter .2s ease;
+  border: 2px solid #fff; /* Added outline */
+}
+
+.btn-outline-light:hover {
+  border: 2px solid black; /* Added outline */
+}
+
+
+.floating-shapes {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.floating-shapes span {
+  position: absolute;
+  font-size: 2rem;
+  animation: float 12s linear infinite;
+  opacity: 0.7;
+}
+.floating-shapes span:nth-child(1) { left: 10%; animation-delay: 0s; }
+.floating-shapes span:nth-child(2) { left: 20%; animation-delay: 1s; }
+.floating-shapes span:nth-child(3) { left: 30%; animation-delay: 2s; }
+.floating-shapes span:nth-child(4) { left: 40%; animation-delay: 3s; }
+.floating-shapes span:nth-child(5) { left: 50%; animation-delay: 4s; }
+.floating-shapes span:nth-child(6) { left: 60%; animation-delay: 5s; }
+.floating-shapes span:nth-child(7) { left: 70%; animation-delay: 6s; }
+.floating-shapes span:nth-child(8) { left: 80%; animation-delay: 7s; }
+.floating-shapes span:nth-child(9) { left: 90%; animation-delay: 8s; }
+.floating-shapes span:nth-child(10) { left: 100%; animation-delay: 9s; }
+
+@keyframes float {
+  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+}

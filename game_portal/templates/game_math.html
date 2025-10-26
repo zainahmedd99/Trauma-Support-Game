@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card candy p-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4>🎨 Shape Fill — Level: <span class="badge bg-dark">{{ level|capitalize }}</span></h4>
+        <div class="score-chip">Score: <span id="score">0</span></div>
+      </div>
+
+      <!-- Timer -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="timer-text">Time left: <span id="time-left">{{ time_limit }}</span>s</div>
+        <div class="progress flex-grow-1 mx-3" style="height: 20px;">
+          <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+               id="timer-bar" role="progressbar" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <!-- Shape Question -->
+      <div class="text-center mb-3">
+        <canvas id="shapeCanvas" width="200" height="200"></canvas>
+      </div>
+
+      <!-- Options -->
+      <div class="d-flex flex-wrap justify-content-center" id="options"></div>
+
+      <form id="endForm" class="d-none" method="POST" action="{{ url_for('submit_level', code=code, level=level) }}">
+        <input type="hidden" name="play_id" value="{{ play_id }}" />
+        <input type="hidden" id="finalScore" name="score" />
+        <input type="hidden" id="finalDur" name="duration_seconds" />
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.candy {
+  background: linear-gradient(135deg, #ffc8dd 0%, #a2d2ff 100%);
+  border-radius: 20px;
+  border: 3px solid #ffafcc;
+}
+.btn-option {
+  background: #ff70a6;
+  color: white;
+  margin: 5px;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-weight: bold;
+  border: none;
+  transition: 0.3s;
+}
+.btn-option:hover { transform: scale(1.05); }
+.score-chip {
+  background: #ffafcc;
+  padding: 8px 15px;
+  border-radius: 50px;
+  font-weight: bold;
+  color: #590d82;
+}
+.timer-text {
+  font-weight: bold;
+  color: #590d82;
+  min-width: 120px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const LEVEL = '{{ level }}';
+  const TIME_LIMIT = {{ time_limit }}; 
+  const TOTAL_Q = {{ q_count }};
+  let score = 0, index = 0, elapsed = 0;
+  let timerInterval;
+
+  const canvas = document.getElementById('shapeCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Shapes with fixed unique colors
+  const shapes = {
+    Circle: "red",
+    Square: "blue",
+    Triangle: "green",
+    Star: "purple",
+    Oval: "orange",
+    Pentagon: "teal",
+    Hexagon: "brown",
+    Heart: "crimson",
+    Diamond: "magenta",
+    Trapezoid: "darkcyan",
+    Parallelogram: "darkgoldenrod",
+    Crescent: "indigo",
+    Arrow: "darkgreen",
+    Cloud: "skyblue"
+  };
+
+  // Fruits & Animals (emoji representation)
+  const emojiItems = {
+    Apple: "🍎",
+    Banana: "🍌",
+    Strawberry: "🍓",
+    Pineapple: "🍍",
+    Watermelon: "🍉",
+    Grapes: "🍇",
+    Orange: "🍊",
+    Cat: "🐱",
+    Dog: "🐶",
+    Fish: "🐟",
+    Elephant: "🐘",
+    Turtle: "🐢",
+    Lion: "🦁",
+    Butterfly: "🦋",
+    Monkey: "🐵",
+    Horse: "🐴",
+    Bird: "🐦",
+    Rabbit: "🐇"
+  };
+
+  let currentAnswer = null;
+  let currentType = "shape"; 
+  let lastAnswer = null; // keep track of previous item
+
+  function drawShape(shape, fill=false) {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.beginPath();
+    ctx.fillStyle = shapes[shape];
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 3;
+
+    if(shape==="Circle"){ ctx.arc(100,100,60,0,2*Math.PI); }
+    else if(shape==="Square"){ ctx.rect(50,50,100,100); }
+    else if(shape==="Triangle"){
+      ctx.moveTo(100,40); ctx.lineTo(40,160); ctx.lineTo(160,160); ctx.closePath();
+    }
+    else if(shape==="Star"){
+      let cx=100, cy=100, spikes=5, outer=60, inner=25;
+      let rot=Math.PI/2*3, step=Math.PI/spikes;
+      ctx.moveTo(cx, cy-outer);
+      for(let i=0;i<spikes;i++){
+        ctx.lineTo(cx+Math.cos(rot)*outer, cy+Math.sin(rot)*outer);
+        rot+=step;
+        ctx.lineTo(cx+Math.cos(rot)*inner, cy+Math.sin(rot)*inner);
+        rot+=step;
+      }
+      ctx.closePath();
+    }
+    else if(shape==="Oval"){ ctx.ellipse(100,100,70,40,0,0,2*Math.PI); }
+    else if(shape==="Pentagon"){
+      let cx=100, cy=100, size=60;
+      for(let i=0;i<5;i++){
+        let angle=(i*2*Math.PI/5)-Math.PI/2;
+        let x=cx+size*Math.cos(angle), y=cy+size*Math.sin(angle);
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.closePath();
+    }
+    else if(shape==="Hexagon"){
+      let cx=100, cy=100, size=60;
+      for(let i=0;i<6;i++){
+        let angle=(i*2*Math.PI/6)-Math.PI/2;
+        let x=cx+size*Math.cos(angle), y=cy+size*Math.sin(angle);
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.closePath();
+    }
+    else if(shape==="Heart"){
+      ctx.moveTo(100,150);
+      ctx.bezierCurveTo(100,130,60,100,60,70);
+      ctx.bezierCurveTo(60,40,100,40,100,70);
+      ctx.bezierCurveTo(100,40,140,40,140,70);
+      ctx.bezierCurveTo(140,100,100,130,100,150);
+    }
+    else if(shape==="Diamond"){
+      ctx.moveTo(100,40); ctx.lineTo(160,100); ctx.lineTo(100,160); ctx.lineTo(40,100); ctx.closePath();
+    }
+    else if(shape==="Trapezoid"){
+      ctx.moveTo(60,60); ctx.lineTo(140,60); ctx.lineTo(170,140); ctx.lineTo(30,140); ctx.closePath();
+    }
+    else if(shape==="Parallelogram"){
+      ctx.moveTo(60,60); ctx.lineTo(160,60); ctx.lineTo(140,140); ctx.lineTo(40,140); ctx.closePath();
+    }
+  else if(shape==="Crescent"){
+  // Draw crescent outline (not filled)
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(100,100,60,0,2*Math.PI,true);
+  ctx.arc(120,100,50,0,2*Math.PI,false);
+  ctx.closePath();
+  ctx.restore();
+}
+
+    else if(shape==="Arrow"){
+      ctx.moveTo(60,80); ctx.lineTo(100,80); ctx.lineTo(100,60);
+      ctx.lineTo(140,100); ctx.lineTo(100,140); ctx.lineTo(100,120); ctx.lineTo(60,120); ctx.closePath();
+    }
+    else if(shape==="Cloud"){
+      ctx.arc(80,120,30,0,2*Math.PI);
+      ctx.arc(110,100,40,0,2*Math.PI);
+      ctx.arc(150,120,30,0,2*Math.PI); ctx.closePath();
+    }
+
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  function drawEmoji(item) {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.font = "100px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(emojiItems[item], 100, 100);
+  }
+
+  function nextQuestion(){
+    // Randomly choose type
+    const isEmoji = Math.random() < 0.4; // 40% emoji, 60% shapes
+    const keys = isEmoji ? Object.keys(emojiItems) : Object.keys(shapes);
+
+    // pick item that is not same as last
+    let item;
+    do {
+      item = keys[Math.floor(Math.random()*keys.length)];
+    } while(item === lastAnswer);
+
+    currentAnswer = item;
+    lastAnswer = item;  // update last
+    currentType = isEmoji ? "emoji" : "shape";
+
+    if(isEmoji) drawEmoji(item);
+    else drawShape(item,false);
+
+    // Build mixed options: ensure at least 1 emoji + 1 shape
+    const allShapes = Object.keys(shapes);
+    const allEmojis = Object.keys(emojiItems);
+
+    let options = [];
+    if(isEmoji){
+      options = [item];
+      while(options.length < 3){
+        let s = allShapes[Math.floor(Math.random()*allShapes.length)];
+        if(!options.includes(s)) options.push(s);
+      }
+    } else {
+      options = [item];
+      while(options.length < 3){
+        let e = allEmojis[Math.floor(Math.random()*allEmojis.length)];
+        if(!options.includes(e)) options.push(e);
+      }
+    }
+
+    options.sort(()=>Math.random()-0.5);
+
+    const optsDiv = document.getElementById('options');
+    optsDiv.innerHTML = '';
+    options.forEach(s=>{
+      const btn=document.createElement('button');
+      btn.className='btn-option';
+      btn.textContent=s;
+      btn.onclick=(e)=>{ e.preventDefault(); checkAnswer(s); };
+      optsDiv.appendChild(btn);
+    });
+  }
+
+  function checkAnswer(choice){
+    if(choice===currentAnswer){
+      score+=10;
+      if(currentType==="shape") drawShape(currentAnswer,true);
+      else drawEmoji(currentAnswer);
+    }
+    index++;
+    document.getElementById('score').textContent=score;
+    if(index>=TOTAL_Q){ endGame(); } else { setTimeout(nextQuestion,500); }
+  }
+
+  // Timer
+  function startTimer(duration){
+    let timeLeft=duration;
+    const timeLeftEl=document.getElementById('time-left');
+    const timerBar=document.getElementById('timer-bar');
+    timerInterval=setInterval(()=>{
+      timeLeft--; elapsed=duration-timeLeft;
+      timeLeftEl.textContent=timeLeft;
+      timerBar.style.width=(timeLeft/duration*100)+'%';
+      if(timeLeft<=10){
+        timerBar.classList.remove('bg-warning');
+        timerBar.classList.add('bg-danger');
+      }
+      if(timeLeft<=0){
+        clearInterval(timerInterval); endGame();
+      }
+    },1000);
+  }
+
+  function endGame(){
+    clearInterval(timerInterval);
+    document.getElementById('finalScore').value=score;
+    document.getElementById('finalDur').value=elapsed;
+    document.getElementById('endForm').submit();
+  }
+
+  // Start game
+  nextQuestion();
+  startTimer(TIME_LIMIT);
+});
+</script>
+
+
+
+
+{% endblock %}

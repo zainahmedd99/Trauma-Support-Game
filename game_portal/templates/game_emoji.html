@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card candy p-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4>🧩 Emoji Quest — Level: <span class="badge bg-dark">{{ level|capitalize }}</span></h4>
+        <div class="score-chip">Score: <span id="score">0</span></div>
+      </div>
+      
+      <!-- Timer display with countdown -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="timer-text">Time left: <span id="time-left">{{ time_limit }}</span>s</div>
+        <div class="progress flex-grow-1 mx-3" style="height: 20px;">
+          <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+               id="timer-bar" role="progressbar" style="width: 100%"></div>
+        </div>
+      </div>
+      
+      <div class="text-center display-4" id="emoji">🤔❓</div>
+
+      <input class="form-control form-control-lg my-3" id="answer" placeholder="Type your answer..." autocomplete="off" style="max-width: 600px; /* Increased width */
+  width: 80%;       /* responsive width */
+  margin: 0 auto;   /* Centered */
+  text-align: center;"/>
+
+      <button class="btn btn-sugar" id="btnSubmit" style=" max-width: 600px; /* Increased width */
+  width: 80%;       /* responsive width */
+  margin: 0 auto;   /* Centered */
+  text-align: center;" >Submit</button>
+      <form id="endForm" class="d-none" method="POST" action="{{ url_for('submit_level', code=code, level=level) }}">
+        <input type="hidden" name="play_id" value="{{ play_id }}" />
+        <input type="hidden" id="finalScore" name="score" />
+        <input type="hidden" id="finalDur" name="duration_seconds" />
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.candy {
+  background: linear-gradient(135deg, #ffc8dd 0%, #a2d2ff 100%);
+  border-radius: 20px;
+  border: 3px solid #ffafcc;
+}
+
+.btn-sugar {
+  background: linear-gradient(135deg, #ff70a6 0%, #ff9770 100%);
+  color: white;
+  font-weight: bold;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 50px;
+  transition: all 0.3s;
+}
+
+.btn-sugar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.score-chip {
+  background: #ffafcc;
+  padding: 8px 15px;
+  border-radius: 50px;
+  font-weight: bold;
+  color: #590d82;
+}
+
+.timer-text {
+  font-weight: bold;
+  color: #590d82;
+  min-width: 120px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const bank = {
+    low: [
+      {e:'🍎📚', a:'apple'},
+      {e:'🐶🏠', a:'dog'},
+      {e:'☀️🌞', a:'sun'},
+      {e:'🌧️☔', a:'rain'},
+      {e:'🚗💨', a:'car'}
+    ],
+    medium: [
+      {e:'🐱📗', a:'cat'},
+      {e:'🍕⏰', a:'pizza'},
+      {e:'🌙⭐', a:'night'},
+      {e:'🦁👑', a:'lion'},
+      {e:'🏠🔥🚒', a:'fire'},
+      {e:'🍫🍪', a:'chocolate'}
+    ],
+    high: [
+      {e:'⚡🏃', a:'fast'},
+      {e:'🧊⛄', a:'ice'},
+      {e:'🦄✨', a:'unicorn'},
+      {e:'📱⚙️', a:'phone'},
+      {e:'🚀🌙', a:'rocket'},
+      {e:'🎨🖌️', a:'art'},
+      {e:'🎵🎧', a:'music'}
+    ]
+  };
+
+  const LEVEL = {{ level|tojson }};
+  const TIME_LIMIT = {{ time_limit }};
+  const TOTAL_Q = {{ q_count }};
+  let score = 0, index = 0, elapsed = 0;
+  const pool = bank[LEVEL].slice(0, TOTAL_Q);
+  let timerInterval;
+
+  function showQ(){
+    const q = pool[index];
+    document.getElementById('emoji').textContent = q.e;
+    document.getElementById('answer').value = '';
+    document.getElementById('answer').focus();
+  }
+
+  function submit(){
+    const val = document.getElementById('answer').value.trim().toLowerCase();
+    if(!val) return;
+    if (val === pool[index].a) { 
+      score += 10; 
+      // Visual feedback for correct answer
+      document.getElementById('emoji').classList.add('text-success');
+      setTimeout(() => document.getElementById('emoji').classList.remove('text-success'), 300);
+    } else {
+      // Visual feedback for incorrect answer
+      document.getElementById('emoji').classList.add('text-danger');
+      setTimeout(() => document.getElementById('emoji').classList.remove('text-danger'), 300);
+    }
+    index++;
+    document.getElementById('score').textContent = score;
+    if(index >= pool.length) endGame(); else showQ();
+  }
+
+  document.getElementById('btnSubmit').addEventListener('click', submit);
+  document.getElementById('answer').addEventListener('keydown', e => { 
+    if(e.key === 'Enter'){ e.preventDefault(); submit(); } 
+  });
+
+  // Timer function
+  function startTimer(duration) {
+    let timeLeft = duration;
+    const timeLeftElement = document.getElementById('time-left');
+    const timerBar = document.getElementById('timer-bar');
+    
+    timerInterval = setInterval(function() {
+      timeLeft--;
+      elapsed = duration - timeLeft;
+      
+      // Update the display
+      timeLeftElement.textContent = timeLeft;
+      
+      // Update the progress bar
+      const percentage = (timeLeft / duration) * 100;
+      timerBar.style.width = percentage + '%';
+      
+      // Change color when time is running out
+      if (timeLeft <= 10) {
+        timerBar.classList.remove('bg-warning');
+        timerBar.classList.add('bg-danger');
+      }
+      
+      // End game when time is up
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function endGame(){
+    clearInterval(timerInterval);
+    document.getElementById('finalScore').value = score;
+    document.getElementById('finalDur').value = elapsed;
+    document.getElementById('endForm').submit();
+  }
+
+  // Start the game
+  showQ();
+  startTimer(TIME_LIMIT);
+});
+</script>
+{% endblock %}
