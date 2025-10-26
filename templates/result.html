@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card candy p-4 text-center" id="candy">
+     
+      <h3>🏁 Game Over</h3>
+     <p class="text-muted">{{ meta[2] }} — User ID #{{ meta[6] }}</p>
+      <div class="display-6 mb-3">Total Score: <strong>{{ meta[3] }}</strong></div>
+      <p class="mb-4">Started: {{ meta[4] }} &nbsp; • &nbsp; Finished: {{ meta[5] }}</p>
+
+  <div class="row g-3 text-start">
+  {% for lvl, score, dur, st, fin in levels %}
+    {% if lvl == 'low' %}
+      {% set bg_color = '#48efd0' %}  {# teal-ish for low #}
+    {% elif lvl == 'medium' %}
+      {% set bg_color = '#f5a623' %}  {# orange for medium #}
+    {% elif lvl == 'high' %}
+      {% set bg_color = '#ff4d6d' %}  {# pink/red for high #}
+    {% else %}
+      {% set bg_color = '#488efd' %}  {# default #}
+    {% endif %}
+
+    <div class="col-md-4">
+      <div class="card p-3" style="background-color: {{ bg_color }}; color: black;">
+        <h5 class="mb-1">Level: {{ lvl|capitalize }}</h5>
+        <div>Score: <strong>{{ score }}</strong></div>
+        <div>Time: {{ dur }}s</div>
+        <small>{{ st }} → {{ fin }}</small>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+
+      <div class="mt-4 d-flex gap-2 justify-content-center">
+        <a class="btn btn-sugar" href="{{ url_for('dashboard') }}">🏠 Back to Dashboard</a>
+        <a class="btn btn-light" id="light" href="{{ url_for('history') }}">📊 See History</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

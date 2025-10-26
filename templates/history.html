@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card candy p-4">
+  <h3 class="mb-3">📊 Your Game History</h3>
+  <p class="text-muted">Scores per day by game (sum of completed plays on each date).</p>
+  <canvas id="chart" height="120"></canvas>
+</div>
+
+<!-- Table for history -->
+<div class="card candy p-4 mt-4">
+  <h4 class="mb-3">📋 Detailed Scores</h4>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Game</th>
+        <th>Level</th>
+        <th>Score</th>
+        <th>Completed At</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for code, name, level, completed_at, score in rows %}
+      <tr>
+        <td>{{ name }}</td>
+        <td>{{ level|capitalize }}</td>
+        <td>{{ score }}</td>
+        <td>{{ completed_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Chart.js + time adapter -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+<script>
+const labels = {{ labels|tojson }};
+const datasetsIn = {{ datasets|tojson }};
+const colors = [
+  'hsl(0, 70%, 50%)',
+  'hsl(60, 70%, 50%)',
+  'hsl(120, 70%, 50%)',
+  'hsl(180, 70%, 50%)',
+  'hsl(240, 70%, 50%)',
+  'hsl(300, 70%, 50%)'
+];
+const datasets = datasetsIn.map((ds, i) => ({
+  label: ds.label,
+  data: ds.data,
+  borderColor: colors[i % colors.length],
+  backgroundColor: colors[i % colors.length],
+  fill: false,
+  tension: 0.3
+}));
+
+new Chart(document.getElementById('chart'), {
+  type: 'line',
+  data: { labels, datasets },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top' }},
+    scales: {
+      x: {
+        type: 'time',
+        time: { unit: 'minute' },
+        title: { display: true, text: 'Date & Time' }
+      },
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: 'Score' }
+      }
+    },
+    animation: { duration: 800 }
+  }
+});
+</script>
+{% endblock %}

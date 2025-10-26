@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="text-white mb-1">Welcome to 🌈 Trauma Support Game</h2>
+
+{% if session.get('username') %}
+  <h3 class="text-white  mb-3 mt-2" style="font-size: 2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+    Hi, {{ session['username'] }}
+  </h3>
+{% endif %}
+
+<p class="text-white mb-3">Pick a game and start your adventure. Levels unlock as you win.</p>
+
+<div class="row g-4">
+  {% for id, code, name, desc in games %}
+  <div class="col-md-6">
+    <div class="card candy game-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-start">
+        <h4 class="game-title">🤹 {{ name }}</h4>
+        {% if best.get(code) %}
+          <span class="score-chip bounce">🏆 Best: {{ best.get(code) }}</span>
+        {% endif %}
+      </div>
+      <p class="text-muted">{{ desc }}</p>
+      <div class="d-flex gap-2">
+        <a class="btn btn-sugar glow" href="{{ url_for('start_game', code=code) }}">🚀 Start</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
